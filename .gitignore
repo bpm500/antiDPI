@@ -1,0 +1,33 @@
+# Portable toolchain, local caches & generated build outputs
+toolchain/
+out/
+.gradle/
+.kotlin/
+build/
+*/build/
+app/build/
+.cxx/
+.externalNativeBuild/
+
+# Native binaries compiled by scripts/build_native.(bat|sh) from third_party/
+app/src/main/jniLibs/
+
+# Local signing keystores & machine-specific config
+*.jks
+*.keystore
+*.apk
+*.aab
+local.properties
+
+# IDE & OS metadata
+.idea/
+*.iml
+*.hprof
+captures/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python cache
+__pycache__/
+*.py[cod]

@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">antiDPI</string>
+    <string name="tile_antidpi">antiDPI</string>
+    <string name="tile_tgproxy">tg-ws-proxy</string>
+
+    <string name="tab_connect">Connect</string>
+    <string name="tab_create">Create</string>
+    <string name="tab_test">Test</string>
+    <string name="tab_utils">Utils</string>
+
+    <string name="status_connected">Подключено: %1$s</string>
+    <string name="status_connecting">Подключение: %1$s…</string>
+    <string name="status_disconnected">Отключено</string>
+    <string name="status_error">Ошибка: %1$s</string>
+
+    <string name="configs_title">КОНФИГИ</string>
+    <string name="no_config_selected">Конфиг не выбран</string>
+    <string name="tap_to_connect">Нажмите для подключения</string>
+    <string name="tap_to_disconnect">Нажмите для отключения</string>
+
+    <string name="action_rename">Переименовать</string>
+    <string name="action_delete">Удалить</string>
+    <string name="action_show_args">Показать аргументы</string>
+    <string name="action_copy">Копировать</string>
+    <string name="action_clear">Очистить</string>
+    <string name="action_save">Сохранить</string>
+    <string name="action_cancel">Отмена</string>
+    <string name="action_close">Закрыть</string>
+    <string name="action_enable">Включить</string>
+    <string name="action_later">Позже</string>
+    <string name="action_download">Скачать</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_parallel_slots">Параллельных слотов теста</string>
+    <string name="settings_check_update">Обновления</string>
+    <string name="settings_about">About</string>
+    <string name="settings_background_title">Работа в фоне</string>
+    <string name="settings_background_enabled">Оптимизация батареи отключена</string>
+    <string name="settings_background_disabled">Оптимизация батареи активна (возможен разрыв VPN)</string>
+    <string name="settings_version">Версия %1$s</string>
+
+    <string name="update_idle">Проверить релизы на GitHub</string>
+    <string name="update_checking">Проверка…</string>
+    <string name="update_up_to_date">Установлена актуальная (v%1$s)</string>
+    <string name="update_available_short">Доступна версия %1$s</string>
+    <string name="update_error">Ошибка: %1$s</string>
+    <string name="update_dialog_title">Доступно обновление</string>
+    <string name="update_dialog_desc">На GitHub вышла новая версия %1$s (текущая: v%2$s). Скачать обновление?</string>
+
+    <string name="bg_prompt_title">Разрешите работу в фоне</string>
+    <string name="bg_prompt_desc">Чтобы VPN-туннель и обход DPI не отключались системой при выключенном экране, разрешите antiDPI работу в фоне без ограничений батареи.</string>
+
+    <string name="test_all">Тестировать все</string>
+    <string name="test_selected">Тестировать выбранный</string>
+    <string name="test_stop">Стоп</string>
+    <string name="test_console_title">ЛОГ ТЕСТА</string>
+    <string name="test_results_title">РЕЙТИНГ</string>
+
+    <string name="create_targets">ЦЕЛИ</string>
+    <string name="create_target_discord">Discord</string>
+    <string name="create_target_youtube">YouTube</string>
+    <string name="create_num_configs">СКОЛЬКО КОНФИГОВ НАЙТИ: %1$d</string>
+    <string name="create_start">Создать</string>
+    <string name="create_stop">Стоп</string>
+    <string name="create_manual_title">РУЧНОЙ КОНФИГ</string>
+    <string name="create_manual_name_hint">Имя конфига</string>
+    <string name="create_manual_args_hint">Аргументы ciadpi (напр. --split 1 --tlsrec 1+s)</string>
+    <string name="create_manual_validate_save">Проверить и сохранить</string>
+    <string name="create_log_title">ВЫВОД</string>
+
+    <string name="vpn_notif_title">antiDPI работает</string>
+    <string name="vpn_notif_text">Конфиг: %1$s</string>
+    <string name="vpn_notif_stop">Выключить</string>
+    <string name="vpn_notif_channel">Туннель antiDPI</string>
+
+    <string name="err_no_vpn_permission">Нет разрешения на создание VPN</string>
+    <string name="err_ciadpi_crashed">Процесс ciadpi завершился с ошибкой</string>
+    <string name="err_port_busy">Не удалось занять локальный порт SOCKS5</string>
+    <string name="err_no_network">Нет активного подключения к сети</string>
+    <string name="err_no_targets">Выберите хотя бы одну цель: Discord или YouTube</string>
+    <string name="err_invalid_args">Некорректные аргументы ciadpi</string>
+    <string name="err_empty_name">Введите имя конфига</string>
+    <string name="err_config_exists">Конфиг с таким именем уже существует</string>
+    <string name="copied_to_clipboard">Скопировано в буфер</string>
+
+    <string name="tg_channel_name">Telegram WS Proxy</string>
+    <string name="tg_notif_title">TG WS Proxy</string>
+    <string name="tg_notif_starting">Запуск прокси…</string>
+    <string name="tg_notif_running">Работает на %1$s:%2$d · активных: %3$d</string>
+    <string name="tg_action_stop">Остановить</string>
+
+    <string name="tg_logs">Логи</string>
+    <string name="tg_refresh">Обновить</string>
+    <string name="tg_logs_empty">Лог пока пуст.</string>
+    <string name="tg_log_all">Все</string>
+    <string name="tg_log_warnings">Предупреждения</string>
+    <string name="tg_log_errors">Ошибки</string>
+
+    <string name="tg_status_stopped">ОСТАНОВЛЕН</string>
+    <string name="tg_status_starting">ЗАПУСК…</string>
+    <string name="tg_status_running">РАБОТАЕТ</string>
+    <string name="tg_start_proxy">Запустить</string>
+    <string name="tg_stop_proxy">Остановить</string>
+    <string name="tg_restart">Рестарт</string>
+    <string name="tg_stat_active">Активных</string>
+
+    <string name="tg_cf_line_auto">CF: %1$s · авто</string>
+    <string name="tg_cf_line_fixed">CF: %1$s</string>
+    <string name="tg_cf_trouble_cf">Cloudflare не отвечает: %1$s</string>
+    <string name="tg_cf_trouble_worker">CF Worker не отвечает: %1$s</string>
+    <string name="tg_cf_reason_timeout">превышено время ожидания</string>
+    <string name="tg_cf_reason_reset">соединение сброшено провайдером</string>
+    <string name="tg_cf_reason_tls">подмена сертификата TLS</string>
+    <string name="tg_cf_reason_worker_dns">не найден DNS домена Worker</string>
+    <string name="tg_cf_reason_dns">ошибка DNS</string>
+    <string name="tg_cf_reason_refused">соединение отклонено</string>
+    <string name="tg_cf_reason_limit">исчерпан дневной лимит Cloudflare</string>
+    <string name="tg_cf_reason_forbidden">доступ запрещён (403)</string>
+    <string name="tg_cf_reason_server_error">ошибка сервера Cloudflare (5xx)</string>
+    <string name="tg_cf_reason_http">неожиданный ответ HTTP</string>
+    <string name="tg_cf_reason_network">нет доступа к сети</string>
+    <string name="tg_cf_reason_worker_closed">Worker закрыл соединение</string>
+    <string name="tg_cf_reason_other">неизвестная ошибка (см. лог)</string>
+
+    <string name="tg_error_title">Прокси не запустился</string>
+    <string name="tg_use_port">Использовать порт %1$d</string>
+    <string name="tg_stalled_title">Telegram не получает данные</string>
+    <string name="tg_stalled_body">Telegram подключается, но данные не проходят. Переключите сеть или создайте свой CF Worker ниже.</string>
+    <string name="tg_cf_none_title">CF-прокси недоступен в этой сети</string>
+    <string name="tg_cf_none_body">Ни TLS с обходом, ни обычный TLS, ни порт 80 не прошли проверку.</string>
+    <string name="tg_cf_cutoff_title">Сеть обрывает CF-прокси</string>
+    <string name="tg_cf_cutoff_body">Провайдер рвёт соединения к Cloudflare после ~16 КБ. Попробуйте другую сеть или свой CF Worker.</string>
+
+    <string name="tg_open_telegram">Подключить в Telegram</string>
+    <string name="tg_not_found">Telegram не найден. Скопируйте ссылку вручную.</string>
+    <string name="tg_copy_link">Копировать ссылку</string>
+    <string name="tg_link_copied">Ссылка скопирована</string>
+
+    <string name="tg_saved">Настройки сохранены</string>
+    <string name="tg_saved_restarted">Настройки сохранены, прокси перезапущен</string>
+    <string name="tg_invalid_number">%1$s: введите число</string>
+    <string name="tg_error_bad_tls_strategy">Неверная стратегия: «%1$s»</string>
+    <string name="tg_save_settings">Сохранить настройки</string>
+    <string name="tg_reset_defaults">Сброс</string>
+    <string name="tg_reset_done">Настройки сброшены</string>
+
+    <string name="tg_section_connection">ПОДКЛЮЧЕНИЕ (MTPROTO)</string>
+    <string name="tg_host">Адрес</string>
+    <string name="tg_port">Порт</string>
+    <string name="tg_host_exposed">Внимание: адрес не 127.0.0.1 открывает прокси в локальную сеть.</string>
+    <string name="tg_secret">Секрет (32 hex-символа)</string>
+    <string name="tg_secret_show">Показать</string>
+    <string name="tg_secret_hide">Скрыть</string>
+    <string name="tg_new_secret">Новый</string>
+
+    <string name="tg_section_route">ДАТА-ЦЕНТРЫ И CLOUDFLARE</string>
+    <string name="tg_dc_ip">DC → IP (по одному в строке, напр. 2:149.154.167.220)</string>
+    <string name="tg_cfproxy">Включить CF-proxy</string>
+    <string name="tg_h2">Мультиплексирование медиа (HTTP/2)</string>
+    <string name="tg_cf_user_enabled">Свои домены CF</string>
+    <string name="tg_cf_user_domains">Домены CF (через запятую)</string>
+    <string name="tg_cf_worker_enabled">Использовать CF Worker</string>
+    <string name="tg_cf_worker_domains">Домены Worker (через запятую)</string>
+    <string name="tg_worker_setup_open">Создать CF Worker автоматически</string>
+
+    <string name="tg_advanced_show">ДОПОЛНИТЕЛЬНО: FAKE TLS, ПУЛ, БУФЕР, ЛОГ</string>
+    <string name="tg_advanced_hide">СКРЫТЬ ДОПОЛНИТЕЛЬНЫЕ</string>
+    <string name="tg_fake_tls">Домен Fake TLS (необязательно)</string>
+    <string name="tg_pool_size">Пул WS</string>
+    <string name="tg_buf_kb">Буфер (КБ)</string>
+    <string name="tg_force_test_dc">Тестовые DC</string>
+    <string name="tg_verbose">Подробный лог</string>
+
+    <string name="tg_cf_transport">ПОДКЛЮЧЕНИЕ К CF</string>
+    <string name="tg_cf_transport_auto">Автоматически (рекомендуется)</string>
+    <string name="tg_cf_auto_checking">Проверка CF…</string>
+    <string name="tg_cf_auto_none">Ни один способ CF не прошёл проверку</string>
+    <string name="tg_cf_auto_now">Сейчас: %1$s (%2$s · %3$s)</string>
+    <string name="tg_cf_transport_bypass">TLS с обходом блокировки</string>
+    <string name="tg_cf_transport_tls">Обычный TLS</string>
+    <string name="tg_cf_transport_plain">Без TLS (порт 80)</string>
+
+    <string name="tg_tls_strategy">Стратегия обхода</string>
+    <string name="tg_tls_strategy_auto">Автоматически (рекомендуется)</string>
+    <string name="tg_tls_strategy_default">Разделить TLS (--tlsrec 0+sm --split 2+sm)</string>
+    <string name="tg_tls_strategy_records_oob">Разделить TLS + OOB (--tlsrec 0+sm --oob 2+sm)</string>
+    <string name="tg_tls_strategy_oob">Только OOB (--oob 0+sm)</string>
+    <string name="tg_tls_strategy_parent">Корневой домен в SNI (--sni-parent)</string>
+    <string name="tg_tls_strategy_custom">Своя стратегия</string>
+    <string name="tg_tls_strategy_field">Стратегия (как в ByeDPI)</string>
+
+    <string name="tg_worker_setup_title">Создать Cloudflare Worker</string>
+    <string name="tg_worker_setup_done">Worker создан: %1$s\n\nНажмите «Использовать», чтобы добавить домен в настройки.</string>
+    <string name="tg_worker_setup_use">Использовать</string>
+    <string name="tg_worker_setup_steps">1. Откройте токены Cloudflare и создайте токен по шаблону «Edit Cloudflare Workers» + «Account Settings: Read».\n2. Вставьте токен ниже (он не сохраняется).</string>
+    <string name="tg_worker_setup_open_tokens">Открыть токены Cloudflare</string>
+    <string name="tg_worker_setup_token">API-токен Cloudflare</string>
+    <string name="tg_worker_bad_token">Некорректный токен Cloudflare.</string>
+    <string name="tg_worker_no_account">Токену не хватает права «Account Settings: Read».</string>
+    <string name="tg_worker_no_perm">Токену не хватает прав на редактирование Workers Scripts.</string>
+    <string name="tg_worker_network">Cloudflare API недоступен из текущей сети.</string>
+    <string name="tg_worker_name_taken">Worker с именем «andmtproto» уже занят другим скриптом.</string>
+    <string name="tg_worker_api">Ошибка Cloudflare API</string>
+    <string name="tg_worker_working">Создаю Worker…</string>
+    <string name="tg_worker_create">Создать Worker</string>
+
+    <string name="tg_err_port_in_use">Порт %1$s уже занят.</string>
+    <string name="tg_err_permission">Нет прав на прослушивание порта %1$s.</string>
+    <string name="tg_err_address">Адрес %1$s недоступен.</string>
+    <string name="tg_err_bad_secret">Секрет должен состоять из 32 hex-символов.</string>
+    <string name="tg_err_bad_port">Некорректный порт: %1$s</string>
+    <string name="tg_err_bad_dc_ip">Неверная строка DC → IP: «%1$s»</string>
+    <string name="tg_err_bad_fake_tls">Недопустимый домен Fake TLS: «%1$s»</string>
+    <string name="tg_err_unknown">Ошибка прокси: %1$s</string>
+</resources>

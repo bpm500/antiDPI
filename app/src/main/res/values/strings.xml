@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">antiDPI</string>
+    <string name="tile_antidpi">antiDPI</string>
+    <string name="tile_tgproxy">tg-ws-proxy</string>
+
+    <string name="tab_connect">Connect</string>
+    <string name="tab_create">Create</string>
+    <string name="tab_test">Test</string>
+    <string name="tab_utils">Utils</string>
+
+    <string name="status_connected">Connected: %1$s</string>
+    <string name="status_connecting">Connecting: %1$s…</string>
+    <string name="status_disconnected">Disconnected</string>
+    <string name="status_error">Error: %1$s</string>
+
+    <string name="configs_title">CONFIGS</string>
+    <string name="no_config_selected">No config selected</string>
+    <string name="tap_to_connect">Tap to connect</string>
+    <string name="tap_to_disconnect">Tap to disconnect</string>
+
+    <string name="action_rename">Rename</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_show_args">Show arguments</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_close">Close</string>
+    <string name="action_enable">Enable</string>
+    <string name="action_later">Later</string>
+    <string name="action_download">Download</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_parallel_slots">Parallel test slots</string>
+    <string name="settings_check_update">Updates</string>
+    <string name="settings_about">About</string>
+    <string name="settings_background_title">Background execution</string>
+    <string name="settings_background_enabled">Battery optimization disabled</string>
+    <string name="settings_background_disabled">Battery optimization active (may stop VPN)</string>
+    <string name="settings_version">Version %1$s</string>
+
+    <string name="update_idle">Check GitHub releases</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_up_to_date">Up to date (v%1$s)</string>
+    <string name="update_available_short">New version: %1$s</string>
+    <string name="update_error">Check failed: %1$s</string>
+    <string name="update_dialog_title">Update available</string>
+    <string name="update_dialog_desc">New version %1$s is available on GitHub (current: v%2$s). Download now?</string>
+
+    <string name="bg_prompt_title">Allow background operation</string>
+    <string name="bg_prompt_desc">To keep the VPN tunnel and DPI bypass stable when the screen is off, allow antiDPI to run in the background without battery restrictions.</string>
+
+    <string name="test_all">Test All</string>
+    <string name="test_selected">Test Selected</string>
+    <string name="test_stop">Stop</string>
+    <string name="test_console_title">TEST LOG</string>
+    <string name="test_results_title">RANKING</string>
+
+    <string name="create_targets">TARGETS</string>
+    <string name="create_target_discord">Discord</string>
+    <string name="create_target_youtube">YouTube</string>
+    <string name="create_num_configs">CONFIGS TO FIND: %1$d</string>
+    <string name="create_start">Create</string>
+    <string name="create_stop">Stop</string>
+    <string name="create_manual_title">MANUAL CONFIG</string>
+    <string name="create_manual_name_hint">Config name</string>
+    <string name="create_manual_args_hint">ciadpi arguments (e.g. --split 1 --tlsrec 1+s)</string>
+    <string name="create_manual_validate_save">Validate &amp; Save</string>
+    <string name="create_log_title">OUTPUT</string>
+
+    <string name="vpn_notif_title">antiDPI active</string>
+    <string name="vpn_notif_text">Config: %1$s</string>
+    <string name="vpn_notif_stop">Disconnect</string>
+    <string name="vpn_notif_channel">antiDPI VPN Tunnel</string>
+
+    <string name="err_no_vpn_permission">VPN permission was denied</string>
+    <string name="err_ciadpi_crashed">ciadpi process exited unexpectedly</string>
+    <string name="err_port_busy">Failed to allocate local SOCKS5 port</string>
+    <string name="err_no_network">No active internet connection</string>
+    <string name="err_no_targets">Select at least one target: Discord or YouTube</string>
+    <string name="err_invalid_args">Invalid ciadpi arguments</string>
+    <string name="err_empty_name">Enter a valid config name</string>
+    <string name="err_config_exists">Config with this name already exists</string>
+    <string name="copied_to_clipboard">Copied to clipboard</string>
+
+    <string name="tg_channel_name">Telegram WS Proxy</string>
+    <string name="tg_notif_title">TG WS Proxy</string>
+    <string name="tg_notif_starting">Starting proxy…</string>
+    <string name="tg_notif_running">Running on %1$s:%2$d · active: %3$d</string>
+    <string name="tg_action_stop">Stop</string>
+
+    <string name="tg_logs">Logs</string>
+    <string name="tg_refresh">Refresh</string>
+    <string name="tg_logs_empty">No log yet.</string>
+    <string name="tg_log_all">All</string>
+    <string name="tg_log_warnings">Warnings</string>
+    <string name="tg_log_errors">Errors</string>
+
+    <string name="tg_status_stopped">STOPPED</string>
+    <string name="tg_status_starting">STARTING…</string>
+    <string name="tg_status_running">RUNNING</string>
+    <string name="tg_start_proxy">Start Proxy</string>
+    <string name="tg_stop_proxy">Stop Proxy</string>
+    <string name="tg_restart">Restart</string>
+    <string name="tg_stat_active">Active</string>
+
+    <string name="tg_cf_line_auto">CF: %1$s · auto</string>
+    <string name="tg_cf_line_fixed">CF: %1$s</string>
+    <string name="tg_cf_trouble_cf">Cloudflare unreachable: %1$s</string>
+    <string name="tg_cf_trouble_worker">CF Worker unreachable: %1$s</string>
+    <string name="tg_cf_reason_timeout">connection timed out</string>
+    <string name="tg_cf_reason_reset">connection reset by ISP</string>
+    <string name="tg_cf_reason_tls">TLS certificate mismatch</string>
+    <string name="tg_cf_reason_worker_dns">Worker domain DNS lookup failed</string>
+    <string name="tg_cf_reason_dns">DNS lookup failed</string>
+    <string name="tg_cf_reason_refused">connection refused</string>
+    <string name="tg_cf_reason_limit">Cloudflare daily limit reached</string>
+    <string name="tg_cf_reason_forbidden">access denied (403)</string>
+    <string name="tg_cf_reason_server_error">Cloudflare server error (5xx)</string>
+    <string name="tg_cf_reason_http">unexpected HTTP response</string>
+    <string name="tg_cf_reason_network">no network access</string>
+    <string name="tg_cf_reason_worker_closed">Worker closed connection</string>
+    <string name="tg_cf_reason_other">unknown error (check logs)</string>
+
+    <string name="tg_error_title">Proxy failed to start</string>
+    <string name="tg_use_port">Use port %1$d</string>
+    <string name="tg_stalled_title">Telegram cannot get through</string>
+    <string name="tg_stalled_body">Telegram keeps connecting, but no data arrives. Try switching network or creating your own CF Worker below.</string>
+    <string name="tg_cf_none_title">CF proxy unavailable on this network</string>
+    <string name="tg_cf_none_body">Neither TLS bypass, plain TLS, nor plain HTTP reached Cloudflare.</string>
+    <string name="tg_cf_cutoff_title">ISP cuts CF connections off</string>
+    <string name="tg_cf_cutoff_body">Provider drops Cloudflare connections after ~16 KB. Try another network or own CF Worker.</string>
+
+    <string name="tg_open_telegram">Connect in Telegram</string>
+    <string name="tg_not_found">Telegram app not found. Copy the link instead.</string>
+    <string name="tg_copy_link">Copy Proxy Link</string>
+    <string name="tg_link_copied">Proxy link copied</string>
+
+    <string name="tg_saved">Settings saved</string>
+    <string name="tg_saved_restarted">Settings saved, proxy restarted</string>
+    <string name="tg_invalid_number">%1$s must be a number</string>
+    <string name="tg_error_bad_tls_strategy">Invalid bypass strategy: “%1$s”</string>
+    <string name="tg_save_settings">Save Settings</string>
+    <string name="tg_reset_defaults">Reset Defaults</string>
+    <string name="tg_reset_done">Defaults restored</string>
+
+    <string name="tg_section_connection">CONNECTION (MTPROTO)</string>
+    <string name="tg_host">Host</string>
+    <string name="tg_port">Port</string>
+    <string name="tg_host_exposed">Warning: non-loopback host exposes proxy on the local network.</string>
+    <string name="tg_secret">Secret (32 hex chars)</string>
+    <string name="tg_secret_show">Show</string>
+    <string name="tg_secret_hide">Hide</string>
+    <string name="tg_new_secret">Generate</string>
+
+    <string name="tg_section_route">DATA CENTERS &amp; CLOUDFLARE</string>
+    <string name="tg_dc_ip">DC → IP (one per line, e.g. 2:149.154.167.220)</string>
+    <string name="tg_cfproxy">Enable CF-proxy fallback</string>
+    <string name="tg_h2">Media multiplexing (HTTP/2)</string>
+    <string name="tg_cf_user_enabled">Custom CF domains</string>
+    <string name="tg_cf_user_domains">CF domains (comma-separated)</string>
+    <string name="tg_cf_worker_enabled">Enable CF Worker</string>
+    <string name="tg_cf_worker_domains">Worker domains (comma-separated)</string>
+    <string name="tg_worker_setup_open">Create CF Worker automatically</string>
+
+    <string name="tg_advanced_show">ADVANCED: FAKE TLS, POOL, BUFFER, LOG</string>
+    <string name="tg_advanced_hide">HIDE ADVANCED</string>
+    <string name="tg_fake_tls">Fake TLS domain (optional)</string>
+    <string name="tg_pool_size">WS Pool Size</string>
+    <string name="tg_buf_kb">Buffer (KB)</string>
+    <string name="tg_force_test_dc">Force test DCs</string>
+    <string name="tg_verbose">Verbose logging</string>
+
+    <string name="tg_cf_transport">CF CONNECTION MODE</string>
+    <string name="tg_cf_transport_auto">Automatic (recommended)</string>
+    <string name="tg_cf_auto_checking">Checking CF connection…</string>
+    <string name="tg_cf_auto_none">No CF transport passed check</string>
+    <string name="tg_cf_auto_now">Now: %1$s (%2$s · %3$s)</string>
+    <string name="tg_cf_transport_bypass">TLS with blocking bypass</string>
+    <string name="tg_cf_transport_tls">Plain TLS</string>
+    <string name="tg_cf_transport_plain">No TLS (port 80)</string>
+
+    <string name="tg_tls_strategy">Bypass strategy</string>
+    <string name="tg_tls_strategy_auto">Automatic (recommended)</string>
+    <string name="tg_tls_strategy_default">Split TLS record (--tlsrec 0+sm --split 2+sm)</string>
+    <string name="tg_tls_strategy_records_oob">Split TLS record + OOB (--tlsrec 0+sm --oob 2+sm)</string>
+    <string name="tg_tls_strategy_oob">OOB only (--oob 0+sm)</string>
+    <string name="tg_tls_strategy_parent">Bare domain in SNI (--sni-parent)</string>
+    <string name="tg_tls_strategy_custom">Custom strategy</string>
+    <string name="tg_tls_strategy_field">Custom strategy (ByeDPI-style)</string>
+
+    <string name="tg_worker_setup_title">Create Cloudflare Worker</string>
+    <string name="tg_worker_setup_done">Worker created: %1$s\n\nTap “Use” to add it to CF Worker domains.</string>
+    <string name="tg_worker_setup_use">Use</string>
+    <string name="tg_worker_setup_steps">1. Open Cloudflare API tokens and create a token from “Edit Cloudflare Workers” template + “Account Settings: Read”.\n2. Paste the token below (it is never stored).</string>
+    <string name="tg_worker_setup_open_tokens">Open Cloudflare Tokens</string>
+    <string name="tg_worker_setup_token">Cloudflare API token</string>
+    <string name="tg_worker_bad_token">Invalid Cloudflare token.</string>
+    <string name="tg_worker_no_account">Token lacks “Account Settings: Read”.</string>
+    <string name="tg_worker_no_perm">Token lacks Workers Scripts edit permission.</string>
+    <string name="tg_worker_network">Cannot reach Cloudflare API on this network.</string>
+    <string name="tg_worker_name_taken">Worker named “andmtproto” already exists and belongs to something else.</string>
+    <string name="tg_worker_api">Cloudflare API error</string>
+    <string name="tg_worker_working">Creating Worker…</string>
+    <string name="tg_worker_create">Create Worker</string>
+
+    <string name="tg_err_port_in_use">Port %1$s is already in use.</string>
+    <string name="tg_err_permission">No permission to listen on port %1$s.</string>
+    <string name="tg_err_address">Address %1$s is unavailable.</string>
+    <string name="tg_err_bad_secret">Secret must be 32 hex characters.</string>
+    <string name="tg_err_bad_port">Invalid port: %1$s</string>
+    <string name="tg_err_bad_dc_ip">Invalid DC → IP rule: “%1$s”</string>
+    <string name="tg_err_bad_fake_tls">Invalid Fake TLS domain: “%1$s”</string>
+    <string name="tg_err_unknown">Proxy error: %1$s</string>
+</resources>

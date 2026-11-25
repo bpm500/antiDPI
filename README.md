@@ -10,7 +10,7 @@
 
 <br/>
 
-**Android DPI Bypass Manager и Telegram WS Proxy — Discord, YouTube, SoundCloud и другие сервисы *
+**Android DPI Bypass Manager и Telegram WS Proxy — Discord, YouTube, SoundCloud и другие сервисы **
 
 [![Android](https://img.shields.io/badge/Android-8.0%2B%20(API%2026%E2%80%9334)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/bpm500/antiDPI)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)

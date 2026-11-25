@@ -1,16 +1,22 @@
 package com.antidpi.app.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -421,6 +427,93 @@ fun ConfigActionDialog(
                                 Text(stringResource(R.string.action_save))
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun DiagnosticsDialog(
+    reportText: String,
+    onRefresh: () -> Unit,
+    onCopy: () -> Unit,
+    onExport: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = AntiDpiColors.Surface,
+            border = BorderStroke(1.dp, AntiDpiColors.Border)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = stringResource(R.string.diagnostics_title),
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    TextButton(
+                        onClick = onRefresh,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.tg_refresh),
+                            color = AntiDpiColors.TextPrimary,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 240.dp, max = 380.dp)
+                        .background(AntiDpiColors.Background, RoundedCornerShape(6.dp))
+                        .border(1.dp, AntiDpiColors.Border, RoundedCornerShape(6.dp))
+                        .verticalScroll(rememberScrollState())
+                        .padding(10.dp)
+                ) {
+                    Text(
+                        text = reportText,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = AntiDpiColors.TextBody,
+                            fontSize = 11.sp
+                        )
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onCopy,
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, AntiDpiColors.Border),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AntiDpiColors.TextPrimary),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(R.string.action_copy), fontSize = 12.sp)
+                    }
+                    OutlinedButton(
+                        onClick = onExport,
+                        shape = RoundedCornerShape(6.dp),
+                        border = BorderStroke(1.dp, AntiDpiColors.Border),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = AntiDpiColors.TextPrimary),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(text = stringResource(R.string.diagnostics_export), fontSize = 12.sp)
+                    }
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.action_close), color = AntiDpiColors.TextSecondary, fontSize = 12.sp)
                     }
                 }
             }

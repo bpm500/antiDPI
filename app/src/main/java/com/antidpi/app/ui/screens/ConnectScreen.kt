@@ -53,6 +53,7 @@ import com.antidpi.app.ui.theme.AntiDpiColors
 fun ConnectScreen(
     configs: List<ConfigEntry>,
     selectedConfigName: String?,
+    currentNetworkType: String?,
     vpnState: VpnState,
     showBgPrompt: Boolean,
     onPowerClick: () -> Unit,
@@ -156,6 +157,20 @@ fun ConnectScreen(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
+            val selectedEntry = configs.firstOrNull { it.name == selectedConfigName }
+            if (selectedEntry?.networkType != null &&
+                currentNetworkType != null &&
+                selectedEntry.networkType != currentNetworkType
+            ) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.network_mismatch_hint),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        color = AntiDpiColors.TextSecondary,
+                        fontSize = 11.sp
+                    )
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(12.dp))

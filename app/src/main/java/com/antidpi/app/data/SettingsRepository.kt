@@ -53,10 +53,11 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
-    suspend fun updateRating(configName: String, ok: Int, total: Int, avgMs: Int) {
+    suspend fun updateRating(configName: String, ok: Int, total: Int, avgMs: Int, networkType: String? = null) {
         context.dataStore.edit { prefs ->
             val current = parseRatings(prefs[Keys.RATINGS_JSON]).toMutableMap()
-            current[configName] = ConfigRating(ok, total, avgMs)
+            val net = networkType ?: current[configName]?.networkType
+            current[configName] = ConfigRating(ok, total, avgMs, net)
             prefs[Keys.RATINGS_JSON] = encodeRatings(current)
         }
     }
@@ -94,10 +95,12 @@ class SettingsRepository(private val context: Context) {
             val result = mutableMapOf<String, ConfigRating>()
             for (key in root.keys()) {
                 val obj = root.optJSONObject(key) ?: continue
+                val netRaw = obj.optString("networkType", "")
                 result[key] = ConfigRating(
                     ok = obj.optInt("ok", 0),
                     total = obj.optInt("total", 0),
-                    avgMs = obj.optInt("avgMs", 9999)
+                    avgMs = obj.optInt("avgMs", 9999),
+                    networkType = netRaw.ifBlank { null }
                 )
             }
             result
@@ -113,6 +116,9 @@ class SettingsRepository(private val context: Context) {
                 put("ok", v.ok)
                 put("total", v.total)
                 put("avgMs", v.avgMs)
+                if (!v.networkType.isNullOrBlank()) {
+                    put("networkType", v.networkType)
+                }
             })
         }
         return root.toString()

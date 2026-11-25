@@ -4,12 +4,16 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
+import com.antidpi.app.core.AppLogger
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
 
 class AntiDpiApp : Application() {
     override fun onCreate() {
         super.onCreate()
+        AppLogger.init(this)
+        installCrashHandler()
+
         if (!Python.isStarted()) {
             Python.start(AndroidPlatform(this))
         }
@@ -24,6 +28,15 @@ class AntiDpiApp : Application() {
                     setShowBadge(false)
                 }
             )
+        }
+        AppLogger.i("App", "Application started")
+    }
+
+    private fun installCrashHandler() {
+        val prev = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            AppLogger.recordCrash(thread, throwable)
+            prev?.uncaughtException(thread, throwable)
         }
     }
 

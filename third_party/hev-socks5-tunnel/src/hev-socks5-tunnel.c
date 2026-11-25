@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <assert.h>
 #include <signal.h>
+#include <stdint.h>
 #include <string.h>
 #include <stdatomic.h>
 #include <hev-sys.h>
@@ -20,6 +21,10 @@
 
 #include <lwip/tcp.h>
 #include <lwip/udp.h>
+#include <lwip/ip.h>
+#include <lwip/icmp.h>
+#include <lwip/icmp6.h>
+#include <lwip/inet_chksum.h>
 #include <lwip/nd6.h>
 #include <lwip/netif.h>
 #include <lwip/ip4_frag.h>
@@ -250,6 +255,10 @@ tcp_accept_handler (void *arg, struct tcp_pcb *pcb, err_t err)
     if (!READ_ONCE (run))
         return ERR_RST;
 
+    /* Reject IPv6 TCP inside TUN so apps fall back to IPv4 mapdns without leaking */
+    if (IP_IS_V6_VAL (pcb->local_ip))
+        return ERR_RST;
+
     /*
      * The task goes first: the session can't be destroyed here, its destructor
      * takes the mutex that is held while lwIP calls us.
@@ -313,10 +322,80 @@ exit:
  * pcb must not be removed before, lwIP would create a new one for it again.
  */
 static void
+udp_send_port_unreach (struct pbuf *p)
+{
+    if (!p || !netif)
+        return;
+
+    if (pbuf_header_force (p, (s16_t)(ip_current_header_tot_len () + UDP_HLEN)))
+        return;
+
+    if (ip_addr_ismulticast (ip_current_dest_addr ()))
+        return;
+
+#if LWIP_IPV6 && LWIP_ICMP6
+    if (ip_current_is_v6 ()) {
+        const ip6_addr_t *reply_src = ip6_current_dest_addr ();
+        const ip6_addr_t *reply_dst = ip6_current_src_addr ();
+        u16_t datalen = LWIP_MIN (p->tot_len, (u16_t)(ip_current_header_tot_len () + 8));
+        struct pbuf *q = pbuf_alloc (PBUF_IP, (u16_t)(sizeof (struct icmp6_hdr) + datalen), PBUF_RAM);
+        if (!q)
+            return;
+        if (q->len >= sizeof (struct icmp6_hdr)) {
+            struct icmp6_hdr *icmp6hdr = (struct icmp6_hdr *)q->payload;
+            icmp6hdr->type = ICMP6_TYPE_DUR;
+            icmp6hdr->code = ICMP6_DUR_PORT;
+            icmp6hdr->data = 0;
+            pbuf_copy_partial_pbuf (q, p, datalen, sizeof (struct icmp6_hdr));
+            icmp6hdr->chksum = 0;
+            IF__NETIF_CHECKSUM_ENABLED (netif, NETIF_CHECKSUM_GEN_ICMP6) {
+                icmp6hdr->chksum = ip6_chksum_pseudo (
+                    q, IP6_NEXTH_ICMP6, q->tot_len, reply_src, reply_dst);
+            }
+            ip6_output_if (q, reply_src, reply_dst, LWIP_ICMP6_HL, 0,
+                           IP6_NEXTH_ICMP6, netif);
+        }
+        pbuf_free (q);
+        return;
+    }
+#endif
+
+#if LWIP_IPV4 && LWIP_ICMP
+    if (!ip_current_is_v6 () && p->len >= IP_HLEN) {
+        const struct ip_hdr *iph = (const struct ip_hdr *)p->payload;
+        ip4_addr_t reply_src, reply_dst;
+        ip4_addr_copy (reply_src, iph->dest);
+        ip4_addr_copy (reply_dst, iph->src);
+        u16_t datalen = LWIP_MIN (p->tot_len, (u16_t)(ip_current_header_tot_len () + 8));
+        struct pbuf *q = pbuf_alloc (PBUF_IP, (u16_t)(sizeof (struct icmp_hdr) + datalen), PBUF_RAM);
+        if (!q)
+            return;
+        if (q->len >= sizeof (struct icmp_hdr)) {
+            struct icmp_hdr *icmphdr = (struct icmp_hdr *)q->payload;
+            icmphdr->type = ICMP_DUR;
+            icmphdr->code = ICMP_DUR_PORT;
+            icmphdr->data = 0;
+            pbuf_copy_partial_pbuf (q, p, datalen, sizeof (struct icmp_hdr));
+            icmphdr->chksum = 0;
+            IF__NETIF_CHECKSUM_ENABLED (netif, NETIF_CHECKSUM_GEN_ICMP) {
+                icmphdr->chksum = inet_chksum (icmphdr, q->len);
+            }
+            ip4_output_if (q, &reply_src, &reply_dst, ICMP_TTL, 0,
+                           IP_PROTO_ICMP, netif);
+        }
+        pbuf_free (q);
+    }
+#endif
+}
+
+static void
 udp_drop_handler (void *arg, struct udp_pcb *pcb, struct pbuf *p,
                   const ip_addr_t *addr, u16_t port)
 {
-    pbuf_free (p);
+    if (p && arg)
+        udp_send_port_unreach (p);
+    if (p)
+        pbuf_free (p);
     udp_recv (pcb, NULL, NULL);
     udp_remove (pcb);
 }
@@ -336,9 +415,9 @@ udp_recv_handler (void *arg, struct udp_pcb *pcb, struct pbuf *p,
         return;
     }
 
-    /* Drop UDP/443 (QUIC) inside tunnel so YouTube/apps fall back to TCP */
-    if (port == 443) {
-        udp_recv (pcb, udp_drop_handler, NULL);
+    /* Reject UDP/443 (QUIC) and IPv6 UDP immediately with ICMP/ICMPv6 Port Unreachable */
+    if (port == 443 || (addr && IP_IS_V6 (addr))) {
+        udp_recv (pcb, udp_drop_handler, (void *)(uintptr_t)1);
         return;
     }
 

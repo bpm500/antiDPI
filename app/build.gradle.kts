@@ -15,8 +15,8 @@ android {
         applicationId = "com.antidpi.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "2.0"
 
         ndk {
             // Python 3.13 on Chaquopy supports 64-bit ABIs (arm64-v8a, x86_64)

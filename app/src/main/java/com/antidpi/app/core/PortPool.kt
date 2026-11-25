@@ -33,7 +33,7 @@ object PortPool {
         }
     }
 
-    private fun isPortAvailable(port: Int): Boolean {
+    fun isPortAvailable(port: Int): Boolean {
         return try {
             ServerSocket(port, 1, InetAddress.getByName("127.0.0.1")).use { ss ->
                 ss.reuseAddress = true

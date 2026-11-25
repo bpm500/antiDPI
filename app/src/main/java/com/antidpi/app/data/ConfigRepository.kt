@@ -79,7 +79,8 @@ class ConfigRepository(private val context: Context) {
                 args = args,
                 lastOk = r?.ok,
                 lastTotal = r?.total,
-                lastAvgMs = r?.avgMs
+                lastAvgMs = r?.avgMs,
+                networkType = r?.networkType
             )
         }.sortedWith(
             compareByDescending<ConfigEntry> { entry ->

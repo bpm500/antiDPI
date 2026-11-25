@@ -84,6 +84,12 @@
     <string name="err_config_exists">Config with this name already exists</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
 
+    <string name="diagnostics_title">Diagnostics</string>
+    <string name="diagnostics_export">Export</string>
+    <string name="diagnostics_exported">Diagnostics exported</string>
+    <string name="network_mismatch_hint">Config was selected on another network, retest?</string>
+    <string name="create_extra_found_title">EXTRA WORKING CONFIGS</string>
+
     <string name="tg_channel_name">Telegram WS Proxy</string>
     <string name="tg_notif_title">TG WS Proxy</string>
     <string name="tg_notif_starting">Starting proxy…</string>

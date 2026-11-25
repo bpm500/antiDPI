@@ -9,6 +9,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.antidpi.app.BuildConfig
 import com.antidpi.app.R
+import com.antidpi.app.core.AppLogger
 import com.antidpi.app.core.CiAdpiProcessManager
 import com.antidpi.app.core.ProbeEngine
 import com.antidpi.app.core.ReleaseInfo
@@ -19,6 +20,8 @@ import com.antidpi.app.data.SettingsRepository
 import com.antidpi.app.model.AppSettings
 import com.antidpi.app.model.ConfigEntry
 import com.antidpi.app.model.ConfigRating
+import com.antidpi.app.model.ExtraStrategyResult
+import com.antidpi.app.model.ProbeResult
 import com.antidpi.app.model.ProbeTarget
 import com.antidpi.app.model.VpnState
 import com.antidpi.app.vpn.AntiDpiVpnService
@@ -102,6 +105,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _manualValidating = MutableStateFlow(false)
     val manualValidating: StateFlow<Boolean> = _manualValidating.asStateFlow()
 
+    private val _extraFoundStrategies = MutableStateFlow<List<ExtraStrategyResult>>(emptyList())
+    val extraFoundStrategies: StateFlow<List<ExtraStrategyResult>> = _extraFoundStrategies.asStateFlow()
+
+    private var lastCreateGroupCount = 2
+
+    private val _currentNetworkType = MutableStateFlow(detectNetworkType())
+    val currentNetworkType: StateFlow<String?> = _currentNetworkType.asStateFlow()
+
     // Update check state
     private val _updateState = MutableStateFlow<UpdateUiState>(UpdateUiState.Idle)
     val updateState: StateFlow<UpdateUiState> = _updateState.asStateFlow()
@@ -163,6 +174,73 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun refreshBatteryStatus() {
         _isIgnoringBattery.value = checkIgnoringBattery()
+        _currentNetworkType.value = detectNetworkType()
+    }
+
+    fun detectNetworkType(): String? {
+        val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager ?: return null
+        val net = cm.activeNetwork ?: return null
+        val caps = cm.getNetworkCapabilities(net) ?: return null
+        if (!caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) return null
+        return when {
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "WIFI"
+            caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "CELLULAR"
+            else -> "OTHER"
+        }
+    }
+
+    fun hasActiveIpv6Address(): Boolean {
+        return try {
+            val cm = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            val net = cm?.activeNetwork
+            val lp = if (net != null) cm.getLinkProperties(net) else null
+            lp?.linkAddresses?.any { la ->
+                val addr = la.address
+                addr is java.net.Inet6Address && !addr.isLoopbackAddress && !addr.isLinkLocalAddress
+            } ?: false
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun buildDiagnosticsText(): String {
+        val state = vpnState.value
+        val netType = detectNetworkType() ?: "NONE"
+        val hasV6 = hasActiveIpv6Address()
+        val ciAlive = AntiDpiVpnService.isCiAdpiRunning()
+        val ciPort = AntiDpiVpnService.activePort()
+        val hevAlive = AntiDpiVpnService.isHevRunning()
+        val domains = AntiDpiVpnService.recentDomainsFlow.value
+        val logs = AppLogger.readLastLines(100)
+        val crashes = AppLogger.readCrashTail(30)
+
+        return buildString {
+            appendLine("=== STATUS ===")
+            appendLine("VPN: $state")
+            appendLine("ciadpi: ${if (ciAlive) "RUNNING (127.0.0.1:${ciPort ?: "?"})" else "STOPPED"}")
+            appendLine("hev-socks5-tunnel: ${if (hevAlive) "RUNNING (mapdns 198.18.0.2 -> ATYP=3)" else "STOPPED"}")
+            appendLine("IPv6: TUN ::/0 -> drop/RST in hev (interface has v6=$hasV6)")
+            appendLine("Network: $netType | Selected: ${settings.value.selectedConfigName ?: "-"}")
+            appendLine()
+            appendLine("=== RECENT DOMAINS IN CIADPI (${domains.size}) ===")
+            if (domains.isEmpty()) {
+                appendLine("(none yet — enable VPN and open YouTube/Discord)")
+            } else {
+                domains.asReversed().forEach { appendLine("• $it") }
+            }
+            if (crashes.isNotEmpty()) {
+                appendLine()
+                appendLine("=== CRASH.LOG (LAST) ===")
+                crashes.forEach { appendLine(it) }
+            }
+            appendLine()
+            appendLine("=== APP.LOG (LAST ${logs.size} LINES) ===")
+            if (logs.isEmpty()) {
+                appendLine("(empty)")
+            } else {
+                logs.forEach { appendLine(it) }
+            }
+        }
     }
 
     private fun checkIgnoringBattery(): Boolean {
@@ -213,6 +291,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun setTargetYouTube(v: Boolean) { _targetYouTube.value = v }
     fun setNumConfigsToFind(n: Int) { _numConfigsToFind.value = n.coerceIn(1, 10) }
 
+    fun saveExtraStrategy(extra: ExtraStrategyResult) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (configRepo.isStrategyExisting(extra.args, extra.baseName)) {
+                _extraFoundStrategies.value = _extraFoundStrategies.value.filterNot { it.baseName == extra.baseName }
+                return@launch
+            }
+            val finalName = numberedStrategyName(extra.baseName)
+            configRepo.saveConfig(finalName, extra.args)
+            val totalGroups = lastCreateGroupCount.coerceAtLeast(1)
+            settingsRepo.updateRating(finalName, totalGroups, totalGroups, extra.avgMs, extra.networkType)
+            _extraFoundStrategies.value = _extraFoundStrategies.value.filterNot { it.baseName == extra.baseName }
+            reloadConfigs()
+            appendCreateLog("✓ Saved extra: $finalName")
+        }
+    }
+
     fun clearTestLogs() { _testLogs.value = emptyList() }
     fun clearCreateLogs() { _createLogs.value = emptyList() }
     fun clearManualError() { _manualError.value = null }
@@ -243,17 +337,19 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             val hostlist = configRepo.getHostlistFile()
-            val targets = ProbeEngine.DEFAULT_TARGETS
-            val (okCount, avgMs, summaryLines) = testSingleConfig(cfg, hostlist, targets, testStopFlag, activeTestProcesses)
+            val groups = defaultTargetGroups()
+            val netType = detectNetworkType()
+            _currentNetworkType.value = netType
+            val (okCount, avgMs, summaryLines) = testSingleConfig(cfg, hostlist, groups, testStopFlag, activeTestProcesses)
 
             if (!testStopFlag.get()) {
-                settingsRepo.updateRating(cfg.name, okCount, targets.size, avgMs)
-                summaryLines.forEach { appendTestLog("  $it") }
-                appendTestLog("Result: $okCount/${targets.size} OK (${if (avgMs < 9000) "$avgMs ms" else "timeout"})")
+                settingsRepo.updateRating(cfg.name, okCount, groups.size, avgMs, netType)
+                summaryLines.forEach { appendTestLog(it) }
+                appendTestLog("Result: $okCount/${groups.size} OK (${if (avgMs < 9000) "$avgMs ms" else "timeout"})")
                 _testRanking.value = buildString {
                     appendLine("CONFIG: ${cfg.name}")
-                    summaryLines.forEach { appendLine("  $it") }
-                    append("Score: $okCount/${targets.size} OK")
+                    summaryLines.forEach { appendLine(it) }
+                    append("Score: $okCount/${groups.size} OK")
                 }
                 _testProgress.value = 1f
             } else {
@@ -275,7 +371,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         val slots = settings.value.parallelSlots.coerceIn(1, 6)
         val hostlist = configRepo.getHostlistFile()
-        val targets = ProbeEngine.DEFAULT_TARGETS
+        val groups = defaultTargetGroups()
+        val netType = detectNetworkType()
+        _currentNetworkType.value = netType
 
         appendTestLog("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         appendTestLog("Testing ${allConfigs.size} configs ($slots parallel slots)...")
@@ -299,15 +397,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                         while (!testStopFlag.get()) {
                             val cfg = queue.poll() ?: break
                             val (okCount, avgMs, lines) = testSingleConfig(
-                                cfg, hostlist, targets, testStopFlag, activeTestProcesses
+                                cfg, hostlist, groups, testStopFlag, activeTestProcesses
                             )
                             if (testStopFlag.get()) break
-                            scored[cfg.name] = ConfigRating(okCount, targets.size, avgMs)
+                            scored[cfg.name] = ConfigRating(okCount, groups.size, avgMs, netType)
                             val count = done.incrementAndGet()
                             _testProgress.value = count.toFloat() / total.toFloat()
                             logMutex.withLock {
                                 appendTestLog("\n▶ [$count/$total] ${cfg.name}")
-                                lines.forEach { appendTestLog("  $it") }
+                                lines.forEach { appendTestLog(it) }
                             }
                         }
                     }
@@ -372,10 +470,57 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _isTesting.value = false
     }
 
+    private fun defaultTargetGroups(): List<Pair<String, List<ProbeTarget>>> = listOf(
+        "Discord" to ProbeEngine.DISCORD_TARGETS,
+        "YouTube" to ProbeEngine.YOUTUBE_TARGETS
+    )
+
+    private class GroupRunResult(val ok: Boolean, val avgMs: Int)
+
+    private suspend fun runGroupProbes3of3(
+        socksPort: Int,
+        cfgName: String,
+        groupName: String,
+        groupTargets: List<ProbeTarget>,
+        stopCheck: () -> Boolean
+    ): GroupRunResult {
+        val latencies = mutableListOf<Int>()
+        for (pass in 1..3) {
+            for (target in groupTargets) {
+                if (stopCheck()) return GroupRunResult(false, 9999)
+                val res = ProbeEngine.probeThroughSocks5(
+                    socksPort = socksPort,
+                    target = target,
+                    timeoutMs = 5000,
+                    retries = 1,
+                    isStopped = stopCheck
+                )
+                AppLogger.d("Probe", "[$cfgName] $groupName pass $pass/3 | ${formatProbeDebug(res)}")
+                if (!res.ok) {
+                    return GroupRunResult(false, 9999)
+                }
+                res.latencyMs?.let { latencies.add(it) }
+            }
+        }
+        val avg = if (latencies.isNotEmpty()) latencies.average().toInt() else 9999
+        return GroupRunResult(true, avg)
+    }
+
+    private fun formatProbeDebug(res: ProbeResult): String {
+        val statusStr = res.statusCode?.toString() ?: "-"
+        val latStr = res.latencyMs?.let { "${it}ms" } ?: "-"
+        val ipStr = res.resolvedIp ?: "?"
+        return if (res.ok) {
+            "${res.targetName} OK ${res.url} HTTP=$statusStr bytes=${res.bodyBytes} $latStr ip=$ipStr"
+        } else {
+            "${res.targetName} FAIL ${res.url} HTTP=$statusStr bytes=${res.bodyBytes} $latStr reason=${res.error ?: "blocked"} ip=$ipStr"
+        }
+    }
+
     private suspend fun testSingleConfig(
         cfg: ConfigEntry,
         hostlist: java.io.File?,
-        targets: List<ProbeTarget>,
+        groups: List<Pair<String, List<ProbeTarget>>>,
         stopFlag: AtomicBoolean,
         activeBag: ConcurrentLinkedQueue<CiAdpiProcessManager.RunningInstance>
     ): Triple<Int, Int, List<String>> {
@@ -384,32 +529,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             hostlistFile = hostlist
         )
         val inst = started.getOrElse { err ->
-            return Triple(0, 99999, listOf("ciadpi failed: ${err.message}"))
+            AppLogger.w("Test", "[${cfg.name}] ciadpi start failed: ${err.message}")
+            return Triple(0, 99999, listOf("  ciadpi failed: ${err.message}"))
         }
         activeBag.add(inst)
         return try {
             val lines = mutableListOf<String>()
-            var okCount = 0
+            var okGroupCount = 0
             val latencies = mutableListOf<Int>()
-            for (target in targets) {
+            for ((groupName, groupTargets) in groups) {
                 if (stopFlag.get()) break
-                val res = ProbeEngine.probeThroughSocks5(
+                val runRes = runGroupProbes3of3(
                     socksPort = inst.port,
-                    target = target,
-                    timeoutMs = 5000,
-                    retries = 2,
-                    isStopped = { stopFlag.get() }
+                    cfgName = cfg.name,
+                    groupName = groupName,
+                    groupTargets = groupTargets,
+                    stopCheck = { stopFlag.get() }
                 )
-                if (res.ok) {
-                    okCount++
-                    res.latencyMs?.let { latencies.add(it) }
-                    lines.add("${target.name}: ✓ (${res.latencyMs} ms, ip=${res.resolvedIp ?: "?"})")
+                if (stopFlag.get()) break
+                if (runRes.ok) {
+                    okGroupCount++
+                    latencies.add(runRes.avgMs)
+                    lines.add("  $groupName: ✓ (${runRes.avgMs} ms)")
                 } else {
-                    lines.add("${target.name}: ✗ (${res.error ?: "blocked"}, ip=${res.resolvedIp ?: "?"})")
+                    lines.add("  $groupName: ✗")
                 }
             }
             val avg = if (latencies.isNotEmpty()) latencies.average().toInt() else 9999
-            Triple(okCount, avg, lines)
+            Triple(okGroupCount, avg, lines)
         } finally {
             activeBag.remove(inst)
             inst.stop()
@@ -425,18 +572,22 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return
         }
 
-        val targets = buildList {
-            if (wantDiscord) add(ProbeEngine.DEFAULT_TARGETS[0])
-            if (wantYouTube) add(ProbeEngine.DEFAULT_TARGETS[1])
+        val groups = buildList {
+            if (wantDiscord) add("Discord" to ProbeEngine.DISCORD_TARGETS)
+            if (wantYouTube) add("YouTube" to ProbeEngine.YOUTUBE_TARGETS)
         }
         val goal = _numConfigsToFind.value.coerceIn(1, 10)
         val slots = settings.value.parallelSlots.coerceIn(1, 6)
         val hostlist = configRepo.getHostlistFile()
+        val netType = detectNetworkType()
+        _currentNetworkType.value = netType
+        lastCreateGroupCount = groups.size
+        _extraFoundStrategies.value = emptyList()
 
         createStopFlag.set(false)
         _isCreating.value = true
         appendCreateLog("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-        appendCreateLog("Create started ($goal requested, targets=${targets.joinToString { it.name }})")
+        appendCreateLog("Create started ($goal requested, targets=${groups.joinToString { it.first }})")
 
         createJob = viewModelScope.launch(Dispatchers.IO) {
             if (!hasNetworkConnection()) {
@@ -472,6 +623,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             val inst = started.getOrNull()
                             if (inst == null) {
                                 val err = started.exceptionOrNull()
+                                AppLogger.w("Create", "[${st.name}] ciadpi start failed: ${err?.message}")
                                 logMutex.withLock {
                                     appendCreateLog("▶ [${idx + 1}/$total] ${st.name}: start failed (${err?.message})")
                                 }
@@ -483,23 +635,23 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             val probeLines = mutableListOf<String>()
                             val latencies = mutableListOf<Int>()
                             try {
-                                for (target in targets) {
+                                for ((groupName, groupTargets) in groups) {
                                     if (createStopFlag.get() || enough.get()) {
                                         allOk = false
                                         break
                                     }
-                                    val res = ProbeEngine.probeThroughSocks5(
+                                    val runRes = runGroupProbes3of3(
                                         socksPort = inst.port,
-                                        target = target,
-                                        timeoutMs = 5000,
-                                        retries = 2,
-                                        isStopped = { createStopFlag.get() || enough.get() }
+                                        cfgName = st.name,
+                                        groupName = groupName,
+                                        groupTargets = groupTargets,
+                                        stopCheck = { createStopFlag.get() || enough.get() }
                                     )
-                                    if (res.ok) {
-                                        res.latencyMs?.let { latencies.add(it) }
-                                        probeLines.add("  ${target.name}: ✓ (${res.latencyMs} ms)")
+                                    if (runRes.ok) {
+                                        latencies.add(runRes.avgMs)
+                                        probeLines.add("  $groupName: ✓ (${runRes.avgMs} ms)")
                                     } else {
-                                        probeLines.add("  ${target.name}: ✗ (${res.error ?: "blocked"})")
+                                        probeLines.add("  $groupName: ✗")
                                         allOk = false
                                         break
                                     }
@@ -519,8 +671,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                             if (!allOk) continue
 
                             saveMutex.withLock {
+                                val avg = if (latencies.isNotEmpty()) latencies.average().toInt() else 9999
                                 if (created.get() >= goal || enough.get()) {
                                     enough.set(true)
+                                    if (!configRepo.isStrategyExisting(st.args, st.name) &&
+                                        _extraFoundStrategies.value.none { it.baseName == st.name }
+                                    ) {
+                                        _extraFoundStrategies.value = _extraFoundStrategies.value +
+                                            ExtraStrategyResult(st.name, st.args, avg, netType)
+                                    }
                                     return@withLock
                                 }
                                 if (configRepo.isStrategyExisting(st.args, st.name)) {
@@ -529,8 +688,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                                 }
                                 val finalName = numberedStrategyName(st.name)
                                 configRepo.saveConfig(finalName, st.args)
-                                val avg = if (latencies.isNotEmpty()) latencies.average().toInt() else 9999
-                                settingsRepo.updateRating(finalName, targets.size, targets.size, avg)
+                                settingsRepo.updateRating(finalName, groups.size, groups.size, avg, netType)
                                 val n = created.incrementAndGet()
                                 reloadConfigs()
                                 logMutex.withLock {

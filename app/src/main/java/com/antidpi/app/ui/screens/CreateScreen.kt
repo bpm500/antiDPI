@@ -55,6 +55,7 @@ fun CreateScreen(
     numConfigsToFind: Int,
     isCreating: Boolean,
     logs: List<String>,
+    extraFound: List<com.antidpi.app.model.ExtraStrategyResult>,
     manualError: String?,
     manualValidating: Boolean,
     onTargetDiscordChange: (Boolean) -> Unit,
@@ -62,6 +63,7 @@ fun CreateScreen(
     onNumConfigsChange: (Int) -> Unit,
     onStartCreate: () -> Unit,
     onStopCreate: () -> Unit,
+    onSaveExtra: (com.antidpi.app.model.ExtraStrategyResult) -> Unit,
     onCopyLogs: () -> Unit,
     onClearLogs: () -> Unit,
     onManualSave: (String, String) -> Unit,
@@ -192,6 +194,58 @@ fun CreateScreen(
         }
 
         Spacer(modifier = Modifier.height(10.dp))
+
+        if (extraFound.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.create_extra_found_title),
+                style = MaterialTheme.typography.labelMedium
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                extraFound.take(4).forEach { extra ->
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(6.dp),
+                        color = AntiDpiColors.Surface,
+                        border = BorderStroke(1.dp, AntiDpiColors.Border)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = extra.baseName,
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = AntiDpiColors.TextPrimary,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                )
+                                Text(
+                                    text = "${extra.avgMs} ms",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = AntiDpiColors.TextSecondary,
+                                        fontSize = 10.sp
+                                    )
+                                )
+                            }
+                            OutlinedButton(
+                                onClick = { onSaveExtra(extra) },
+                                shape = RoundedCornerShape(6.dp),
+                                border = BorderStroke(1.dp, AntiDpiColors.Border),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = AntiDpiColors.TextPrimary),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text(text = stringResource(R.string.action_save), fontSize = 11.sp)
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+        }
 
         // Manual config creation section
         Surface(

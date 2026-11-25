@@ -10,18 +10,18 @@
 
 <br/>
 
-**Android DPI Bypass Manager и Telegram WS Proxy — Discord, YouTube, SoundCloud и другие сервисы без root**
+**Android DPI Bypass Manager и Telegram WS Proxy — Discord, YouTube, SoundCloud и другие сервисы**
 
 [![Android](https://img.shields.io/badge/Android-8.0%2B%20(API%2026%E2%80%9334)-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/bpm500/antiDPI)
 [![Kotlin](https://img.shields.io/badge/Kotlin-Jetpack%20Compose-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![NDK](https://img.shields.io/badge/NDK-byedpi%20%2B%20hev--socks5--tunnel-000000?style=for-the-badge)](https://github.com/bpm500/antiDPI)
-[![Version](https://img.shields.io/badge/Version-1.0-blue?style=for-the-badge)](https://github.com/bpm500/antiDPI/releases)
+[![Version](https://img.shields.io/badge/Version-2.0-blue?style=for-the-badge)](https://github.com/bpm500/antiDPI/releases)
 
 <br/>
 
 > **antiDPI** — мой форк для Android (мобильная адаптация десктопного проекта [zapret++](https://github.com/bpm500/zapret_pp)).  
 > Встроенный **tg-ws-proxy** (вкладка **Utils**) взят из проекта [AndMTProto](https://github.com/oruviyex18/AndMTProto).  
-> Минималистичный чёрно-белый интерфейс, автоподбор стратегий, тестирование в параллельных слотах, две плитки в шторке Android и встроенный WebSocket-прокси для Telegram.
+> Минималистичный чёрно-белый интерфейс, автоподбор стратегий (107 вариантов), параллельное тестирование конфигов, `mapdns` + мгновенный отказ QUIC и встроенный WebSocket-прокси для Telegram.
 
 </div>
 
@@ -139,7 +139,7 @@
 2. **Обновления (`check-update`)** — проверка новых релизов на GitHub при каждом запуске и кнопка ручной проверки с диалогом загрузки.
 3. **About** — ссылка на репозиторий [github.com/bpm500/antiDPI](https://github.com/bpm500/antiDPI).
 4. **Работа в фоне** — проверка и запрос отключения оптимизации батареи Android.
-5. **Версия** — текущая версия приложения (`1.0`).
+5. **Версия** — текущая версия приложения (`2.0`).
 
 ---
 

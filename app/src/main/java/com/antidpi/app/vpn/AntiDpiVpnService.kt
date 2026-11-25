@@ -17,7 +17,9 @@ import android.os.SystemClock
 import androidx.core.app.NotificationCompat
 import com.antidpi.app.MainActivity
 import com.antidpi.app.R
+import com.antidpi.app.core.AppLogger
 import com.antidpi.app.core.CiAdpiProcessManager
+import com.antidpi.app.core.PortPool
 import com.antidpi.app.data.ConfigRepository
 import com.antidpi.app.model.VpnState
 import hev.htproxy.TProxyService
@@ -112,7 +114,11 @@ class AntiDpiVpnService : VpnService() {
     }
 
     private suspend fun startTunnel(configName: String, isReconnect: Boolean = false) {
-        stopTunnel(resetState = !isReconnect, keepNetworkMonitor = isReconnect)
+        val wasActive = _stateFlow.value is VpnState.Connected || _stateFlow.value is VpnState.Connecting
+        if (!isReconnect && wasActive && activeConfigName == configName) {
+            return
+        }
+        stopTunnel(resetState = false, keepNetworkMonitor = isReconnect)
         activeConfigName = configName
         _stateFlow.value = VpnState.Connecting(configName)
 
@@ -125,31 +131,38 @@ class AntiDpiVpnService : VpnService() {
         }
 
         val hostlist = configRepository.getHostlistFile()
+        val vpnPort = if (PortPool.isPortAvailable(VPN_SOCKS_PORT)) VPN_SOCKS_PORT else null
+        clearRecentDomains()
 
+        AppLogger.i("VPN", "Starting tunnel config=$configName preferPort=${vpnPort ?: "pool"}")
         val started = processManager.start(
             args = config.args,
             hostlistFile = hostlist,
-            preferPort = VPN_SOCKS_PORT
+            preferPort = vpnPort,
+            noIpv6 = true,
+            debugLog = true,
+            onLog = { line -> recordCiAdpiLine(line) }
         )
 
         val instance = started.getOrElse { err ->
+            AppLogger.e("VPN", "ciadpi start failed for $configName", err)
             _stateFlow.value = VpnState.Error(err.message ?: getString(R.string.err_ciadpi_crashed))
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             return
         }
         ciadpiInstance = instance
+        activeInstance = instance
 
         val builder = Builder()
             .setSession("antiDPI: $configName")
-            .setMtu(8500)
+            .setMtu(1500)
+            .setBlocking(false)
             .addAddress("198.18.0.1", 32)
             .addRoute("0.0.0.0", 0)
             .addAddress("fc00::1", 128)
             .addRoute("::", 0)
-            .addDnsServer("1.1.1.1")
-            .addDnsServer("8.8.8.8")
-            .addDnsServer("2606:4700:4700::1111")
+            .addDnsServer("198.18.0.2")
 
         try {
             builder.addDisallowedApplication(packageName)
@@ -159,12 +172,14 @@ class AntiDpiVpnService : VpnService() {
         val pfd = try {
             builder.establish()
         } catch (e: Exception) {
+            AppLogger.e("VPN", "Builder.establish failed", e)
             null
         }
 
         if (pfd == null) {
             instance.stop()
             ciadpiInstance = null
+            activeInstance = null
             _stateFlow.value = VpnState.Error(getString(R.string.err_no_vpn_permission))
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
@@ -177,7 +192,7 @@ class AntiDpiVpnService : VpnService() {
             """
             tunnel:
               name: tun0
-              mtu: 8500
+              mtu: 1500
               multi-queue: false
               ipv4: 198.18.0.1
               ipv6: 'fc00::1'
@@ -185,6 +200,12 @@ class AntiDpiVpnService : VpnService() {
               port: ${instance.port}
               address: 127.0.0.1
               udp: 'udp'
+            mapdns:
+              address: 198.18.0.2
+              port: 53
+              network: 100.64.0.0
+              netmask: 255.192.0.0
+              cache-size: 10000
             misc:
               task-stack-size: 86016
               connect-timeout: 5000
@@ -196,12 +217,14 @@ class AntiDpiVpnService : VpnService() {
 
         val ok = TProxyService.TProxyStartService(tproxyConfig.absolutePath, pfd.fd)
         if (!ok) {
+            AppLogger.e("VPN", "TProxyStartService returned false")
             stopTunnelSync()
             _stateFlow.value = VpnState.Error("Failed to start tunnel engine")
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
             return
         }
+        AppLogger.i("VPN", "Tunnel active config=$configName port=${instance.port} mapdns=198.18.0.2")
 
         val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         nm.notify(NOTIFICATION_ID, buildNotification(configName, connecting = false))
@@ -342,6 +365,7 @@ class AntiDpiVpnService : VpnService() {
             } catch (_: Exception) {
             }
             ciadpiInstance = null
+            activeInstance = null
         }
     }
 
@@ -402,6 +426,60 @@ class AntiDpiVpnService : VpnService() {
 
         private val _stateFlow = MutableStateFlow<VpnState>(VpnState.Disconnected)
         val stateFlow: StateFlow<VpnState> = _stateFlow.asStateFlow()
+
+        @Volatile
+        private var activeInstance: CiAdpiProcessManager.RunningInstance? = null
+
+        private val recentDomainsLock = Any()
+        private val recentDomainsDeque = ArrayDeque<String>(60)
+        private val _recentDomainsFlow = MutableStateFlow<List<String>>(emptyList())
+        val recentDomainsFlow: StateFlow<List<String>> = _recentDomainsFlow.asStateFlow()
+
+        fun isCiAdpiRunning(): Boolean = activeInstance?.isAlive() == true
+        fun activePort(): Int? = activeInstance?.port
+        fun isHevRunning(): Boolean = try {
+            TProxyService.TProxyIsRunning()
+        } catch (_: Throwable) {
+            false
+        }
+
+        private fun clearRecentDomains() {
+            synchronized(recentDomainsLock) {
+                recentDomainsDeque.clear()
+                _recentDomainsFlow.value = emptyList()
+            }
+        }
+
+        private fun recordCiAdpiLine(rawLine: String) {
+            val line = rawLine.trim()
+            if (line.isEmpty()) return
+
+            val domain = when {
+                line.startsWith("resolve:") -> line.removePrefix("resolve:").trim()
+                line.startsWith("host:") -> line.removePrefix("host:").trim().substringBefore(" ")
+                else -> null
+            }?.takeIf { it.isNotBlank() && it.contains('.') }
+
+            if (domain != null) {
+                synchronized(recentDomainsLock) {
+                    recentDomainsDeque.remove(domain)
+                    recentDomainsDeque.addLast(domain)
+                    while (recentDomainsDeque.size > 50) {
+                        recentDomainsDeque.removeFirst()
+                    }
+                    _recentDomainsFlow.value = recentDomainsDeque.toList()
+                }
+                AppLogger.d("ciadpi", line)
+            } else if (
+                line.contains("err", ignoreCase = true) ||
+                line.contains("timeout", ignoreCase = true) ||
+                line.contains("exit", ignoreCase = true) ||
+                line.contains("invalid", ignoreCase = true) ||
+                line.startsWith("hosts count:")
+            ) {
+                AppLogger.d("ciadpi", line)
+            }
+        }
 
         fun start(context: Context, configName: String) {
             val intent = Intent(context, AntiDpiVpnService::class.java).apply {

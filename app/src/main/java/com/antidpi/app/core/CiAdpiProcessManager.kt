@@ -52,6 +52,8 @@ class CiAdpiProcessManager(private val context: Context) {
         args: String,
         hostlistFile: File? = null,
         preferPort: Int? = null,
+        noIpv6: Boolean = false,
+        debugLog: Boolean = false,
         onLog: ((String) -> Unit)? = null
     ): Result<RunningInstance> = withContext(Dispatchers.IO) {
         val bin = binaryFile()
@@ -65,7 +67,14 @@ class CiAdpiProcessManager(private val context: Context) {
         val port = preferPort ?: PortPool.acquire()
             ?: return@withContext Result.failure(IllegalStateException("No free local SOCKS5 port"))
 
-        val cmd = buildCommand(bin.absolutePath, port, args, hostlistFile)
+        val cmd = buildCommand(
+            binPath = bin.absolutePath,
+            port = port,
+            rawArgs = args,
+            hostlistFile = hostlistFile,
+            noIpv6 = noIpv6,
+            debugLog = debugLog
+        )
         val logs = Collections.synchronizedList(mutableListOf<String>())
 
         val process = try {
@@ -156,7 +165,9 @@ class CiAdpiProcessManager(private val context: Context) {
             binPath: String,
             port: Int,
             rawArgs: String,
-            hostlistFile: File?
+            hostlistFile: File?,
+            noIpv6: Boolean = false,
+            debugLog: Boolean = false
         ): List<String> {
             val tokens = ConfigRepository.tokenizeArgs(rawArgs)
             val cleaned = mutableListOf<String>()
@@ -164,11 +175,12 @@ class CiAdpiProcessManager(private val context: Context) {
             while (i < tokens.size) {
                 val t = tokens[i]
                 when {
-                    t == "-i" || t == "--ip" || t == "-p" || t == "--port" -> {
+                    t == "-i" || t == "--ip" || t == "-p" || t == "--port" || t == "-x" || t == "--debug" -> {
                         i += 2
                         continue
                     }
-                    t.startsWith("--ip=") || t.startsWith("--port=") || t == "-D" || t == "--daemon" -> {
+                    t.startsWith("--ip=") || t.startsWith("--port=") || t.startsWith("--debug=") ||
+                        t == "-D" || t == "--daemon" || t == "-X" || t == "--no-ipv6" -> {
                         i += 1
                         continue
                     }
@@ -180,24 +192,30 @@ class CiAdpiProcessManager(private val context: Context) {
             }
 
             val cmd = mutableListOf(binPath, "-i", "127.0.0.1", "-p", port.toString())
+            if (noIpv6) cmd.add("-X")
+            if (debugLog) {
+                cmd.add("-x")
+                cmd.add("1")
+            }
             if (hostlistFile != null && hostlistFile.exists()) {
-                val withHosts = mutableListOf(binPath, "-i", "127.0.0.1", "-p", port.toString(), "--hosts", hostlistFile.absolutePath)
+                cmd.add("--hosts")
+                cmd.add(hostlistFile.absolutePath)
                 var idx = 0
                 while (idx < cleaned.size) {
                     val tok = cleaned[idx]
-                    withHosts.add(tok)
+                    cmd.add(tok)
                     if (tok == "-A" && idx + 1 < cleaned.size) {
                         idx++
-                        withHosts.add(cleaned[idx])
-                        withHosts.add("--hosts")
-                        withHosts.add(hostlistFile.absolutePath)
+                        cmd.add(cleaned[idx])
+                        cmd.add("--hosts")
+                        cmd.add(hostlistFile.absolutePath)
                     } else if (tok.startsWith("--auto=") || tok.startsWith("-A=")) {
-                        withHosts.add("--hosts")
-                        withHosts.add(hostlistFile.absolutePath)
+                        cmd.add("--hosts")
+                        cmd.add(hostlistFile.absolutePath)
                     }
                     idx++
                 }
-                return withHosts
+                return cmd
             }
             cmd.addAll(cleaned)
             return cmd

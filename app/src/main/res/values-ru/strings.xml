@@ -84,6 +84,12 @@
     <string name="err_config_exists">Конфиг с таким именем уже существует</string>
     <string name="copied_to_clipboard">Скопировано в буфер</string>
 
+    <string name="diagnostics_title">Диагностика</string>
+    <string name="diagnostics_export">Экспорт</string>
+    <string name="diagnostics_exported">Диагностика сохранена</string>
+    <string name="network_mismatch_hint">Конфиг подобран на другой сети, перетестировать?</string>
+    <string name="create_extra_found_title">ЕЩЁ РАБОЧИЕ КОНФИГИ</string>
+
     <string name="tg_channel_name">Telegram WS Proxy</string>
     <string name="tg_notif_title">TG WS Proxy</string>
     <string name="tg_notif_starting">Запуск прокси…</string>

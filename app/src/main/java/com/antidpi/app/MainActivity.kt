@@ -162,8 +162,10 @@ private fun AntiDpiRoot(
     val numConfigsToFind by viewModel.numConfigsToFind.collectAsState()
     val isCreating by viewModel.isCreating.collectAsState()
     val createLogs by viewModel.createLogs.collectAsState()
+    val extraFound by viewModel.extraFoundStrategies.collectAsState()
     val manualError by viewModel.manualError.collectAsState()
     val manualValidating by viewModel.manualValidating.collectAsState()
+    val currentNetworkType by viewModel.currentNetworkType.collectAsState()
     val updateState by viewModel.updateState.collectAsState()
     val pendingUpdate by viewModel.pendingUpdateDialog.collectAsState()
 
@@ -271,10 +273,19 @@ private fun AntiDpiRoot(
                 0 -> ConnectScreen(
                     configs = configs,
                     selectedConfigName = settings.selectedConfigName,
+                    currentNetworkType = currentNetworkType,
                     vpnState = vpnState,
                     showBgPrompt = !isIgnoringBattery && !settings.bgPromptDismissed,
                     onPowerClick = { toggleVpn() },
-                    onSelectConfig = { viewModel.selectConfig(it) },
+                    onSelectConfig = { name ->
+                        viewModel.selectConfig(name)
+                        val st = vpnState
+                        if ((st is VpnState.Connected && st.configName != name) ||
+                            (st is VpnState.Connecting && st.configName != name)
+                        ) {
+                            AntiDpiVpnService.start(context, name)
+                        }
+                    },
                     onLongPressConfig = { actionTargetConfig = it },
                     onOpenSettings = { showSettings = true },
                     onEnableBackground = onRequestBatteryOptimization,
@@ -287,6 +298,7 @@ private fun AntiDpiRoot(
                     numConfigsToFind = numConfigsToFind,
                     isCreating = isCreating,
                     logs = createLogs,
+                    extraFound = extraFound,
                     manualError = manualError,
                     manualValidating = manualValidating,
                     onTargetDiscordChange = { viewModel.setTargetDiscord(it) },
@@ -294,6 +306,7 @@ private fun AntiDpiRoot(
                     onNumConfigsChange = { viewModel.setNumConfigsToFind(it) },
                     onStartCreate = { viewModel.startCreate() },
                     onStopCreate = { viewModel.stopCreate() },
+                    onSaveExtra = { viewModel.saveExtraStrategy(it) },
                     onCopyLogs = { copyToClipboard(createLogs.joinToString("\n")) },
                     onClearLogs = { viewModel.clearCreateLogs() },
                     onManualSave = { n, a -> viewModel.validateAndSaveManual(n, a) },
